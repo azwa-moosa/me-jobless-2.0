@@ -1,0 +1,9 @@
+[build]
+  command = "pnpm run build:web"
+  publish = "apps/web/.next"
+
+[build.environment]
+  API_BASE_URL = "https://.up.railway.app"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
