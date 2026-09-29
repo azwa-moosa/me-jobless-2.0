@@ -19,7 +19,8 @@ export type Env = z.infer<typeof schema>;
 
 /** Typed, validated config with environment safety switches (PLT-001, PLT-006, D3). Fails fast. */
 export function loadEnv(raw: NodeJS.ProcessEnv = process.env): Env {
-  const parsed = schema.safeParse(raw);
+  // Hosting platforms (e.g. Railway) inject PORT; an explicit API_PORT still wins.
+  const parsed = schema.safeParse({ ...raw, API_PORT: raw.API_PORT ?? raw.PORT });
   if (!parsed.success) {
     throw new Error(`Invalid configuration: ${parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')}`);
   }

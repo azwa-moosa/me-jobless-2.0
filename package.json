@@ -10,6 +10,7 @@
   "scripts": {
     "build:packages": "pnpm --filter \"./packages/**\" run build",
     "build": "pnpm build:packages && pnpm --filter @bml/api --filter @bml/worker --filter @bml/web run build",
+    "build:api": "pnpm --filter \"@bml/api...\" run build",
     "typecheck": "pnpm -r run typecheck",
     "test": "pnpm -r run test",
     "infra:up": "docker compose -f infra/docker/compose.yml up -d",

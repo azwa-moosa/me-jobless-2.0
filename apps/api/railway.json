@@ -1,0 +1,13 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "buildCommand": "pnpm --filter \"@bml/api...\" run build",
+    "watchPatterns": ["apps/api/**", "packages/policy/**", "packages/crypto/**", "pnpm-lock.yaml"]
+  },
+  "deploy": {
+    "startCommand": "node apps/api/dist/main.js",
+    "healthcheckPath": "/ready",
+    "healthcheckTimeout": 120,
+    "restartPolicyType": "ON_FAILURE"
+  }
+}

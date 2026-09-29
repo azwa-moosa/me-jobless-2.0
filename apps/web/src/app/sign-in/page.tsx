@@ -48,7 +48,7 @@ function SignIn() {
         <div className="row-between">
           <div>
             <h2>Choose a DEV persona</h2>
-            <p className="muted mt-1">One persona per draft role (R1–R16) plus edge cases. Roles are pending sign-off (DR-06).</p>
+            <p className="muted mt-1">One persona per draft role plus edge cases. Roles are pending sign-off (DR-06).</p>
           </div>
           <input className="input" style={{ maxWidth: 260 }} placeholder="Filter personas…" value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Filter personas" />
         </div>

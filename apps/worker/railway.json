@@ -1,0 +1,11 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "buildCommand": "pnpm --filter \"@bml/worker...\" run build",
+    "watchPatterns": ["apps/worker/**", "pnpm-lock.yaml"]
+  },
+  "deploy": {
+    "startCommand": "node apps/worker/dist/main.js",
+    "restartPolicyType": "ON_FAILURE"
+  }
+}
