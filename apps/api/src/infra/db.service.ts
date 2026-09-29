@@ -23,7 +23,7 @@ export class DbService implements OnModuleDestroy {
       await c.query('begin');
       if (ctx) {
         await c.query(`select set_config('app.user_id', $1, true), set_config('app.er_override', $2, true)`,
-          [ctx.userId, can(ctx, 'er.case.read_all') ? 'on' : 'off']);
+          [ctx.userId, can(ctx, 'er.case.view_all') ? 'on' : 'off']);
       }
       const out = await fn(c);
       await c.query('commit');

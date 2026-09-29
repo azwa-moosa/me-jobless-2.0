@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { api, ApiError, initials } from '@/lib/api';
 import { ErrorState, Loading } from '@/components/ui';
 
-interface Persona { upn: string; displayName: string; roleCode: string; roleName: string; ref: string; scope: string; expired: boolean; note: string }
+interface Persona { upn: string; displayName: string; roleCode: string; roleName: string; order: number; scope: string; expired: boolean; note: string }
 
 function SignIn() {
   const [personas, setPersonas] = useState<Persona[] | null>(null);
@@ -24,7 +24,7 @@ function SignIn() {
     } catch (e) { setError(e as ApiError); setBusy(null); }
   }
 
-  const sorted = (personas ?? []).slice().sort((a, b) => Number(a.ref?.slice(1)) - Number(b.ref?.slice(1)) || a.upn.localeCompare(b.upn))
+  const sorted = (personas ?? []).slice().sort((a, b) => a.order - b.order || a.upn.localeCompare(b.upn))
     .filter((p) => !filter || `${p.displayName} ${p.roleName} ${p.note}`.toLowerCase().includes(filter.toLowerCase()));
 
   return (
@@ -60,7 +60,7 @@ function SignIn() {
               <div className="avatar">{initials(p.displayName)}</div>
               <div>
                 <strong>{p.displayName}</strong>
-                <div className="role">{p.ref} · {p.roleName}</div>
+                <div className="role">{p.roleCode} · {p.roleName}</div>
                 {p.note.includes('(') && <div className="note">{p.note.slice(p.note.indexOf('(') + 1, p.note.lastIndexOf(')'))}</div>}
                 <div className="note">Scope: {p.scope}{p.expired && <span className="chip chip-bad plain" style={{ marginLeft: 6 }}>Expired grant</span>}</div>
                 {busy === p.upn && <div className="note">Signing in…</div>}

@@ -44,8 +44,8 @@ export interface CaseAccessFacts {
 
 /** ER case-level access: permission AND (case team OR portfolio override). Not menu hiding (ER-003). */
 export function canSeeCase(ctx: SecurityContext, facts: CaseAccessFacts): boolean {
-  if (!can(ctx, 'er.case.read')) return false;
-  return can(ctx, 'er.case.read_all') || facts.isActiveTeamMember || facts.isCreator;
+  if (!can(ctx, 'er.case.view')) return false;
+  return can(ctx, 'er.case.view_all') || facts.isActiveTeamMember || facts.isCreator;
 }
 
 export function auditModulesFor(roleCodes: string[]): '*' | Set<string> {
@@ -104,8 +104,8 @@ const NAV: Array<NavItem & { anyOf: string[] }> = [
   { key: 'my-work', label: 'My Work', href: '/my-work', group: 'main', available: true, anyOf: ['actions.use'] },
   { key: 'er', label: 'ER Case Management', href: '/er', group: 'modules', available: true, anyOf: ['er.dashboard.read'] },
   { key: 'employees', label: 'Employee Lookup', href: '/employees', group: 'modules', available: true, anyOf: ['employee.search'] },
-  { key: 'analytics', label: 'People Analytics', href: '/analytics', group: 'modules', available: false, phase: 'Phase 2', anyOf: ['analytics.dashboard.read', 'analytics.admin'] },
-  { key: 'engagement', label: 'Engagement', href: '/engagement', group: 'modules', available: false, phase: 'Phase 5', anyOf: ['engagement.read', 'engagement.admin', 'fwt.claims'] },
+  { key: 'analytics', label: 'People Analytics', href: '/analytics', group: 'modules', available: false, phase: 'Phase 2', anyOf: ['analytics.dashboard.read', 'analytics.manage'] },
+  { key: 'engagement', label: 'Engagement', href: '/engagement', group: 'modules', available: false, phase: 'Phase 5', anyOf: ['engagement.read', 'engagement.manage', 'fwt.claims'] },
   { key: 'voice', label: 'Employee Voice', href: '/voice', group: 'modules', available: false, phase: 'Phase 7', anyOf: ['voice.submit', 'voice.triage'] },
   { key: 'manager', label: 'People Manager', href: '/manager', group: 'modules', available: false, phase: 'Phase 8', anyOf: ['manager.intake'] },
   { key: 'documents', label: 'Document Studio', href: '/documents', group: 'modules', available: false, phase: 'Phase 4b / 6', anyOf: ['documents.request', 'documents.approve'] },

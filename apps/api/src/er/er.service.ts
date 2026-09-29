@@ -70,7 +70,7 @@ export class ErService {
       return {
         open, overdueActions: overdue, aging,
         byStatus: sm.states.map((s) => ({ code: s.code, label: s.label, count: byStatus.find((b) => b.status_code === s.code)?.n ?? 0 })),
-        scope: can(ctx, 'er.case.read_all') ? 'All cases (portfolio override)' : 'Cases where you are on the case team',
+        scope: can(ctx, 'er.case.view_all') ? 'All cases (portfolio override)' : 'Cases where you are on the case team',
         pendingDecisions: { dAndG: null, letters: null, note: 'D&G and ER letters arrive in Phase 4 (DR-17, DR-18)' },
       };
     });
@@ -166,7 +166,7 @@ export class ErService {
         transitions: closed ? [] : availableTransitions(sm, c.status_code, (p) => can(ctx, p)).filter((t) => t.to !== 'CLOSED')
           .map((t) => ({ to: t.to, label: t.label, requiresReason: !!t.requiresReason })),
         can: {
-          update: !closed && can(ctx, 'er.case.update'), manageTeam: !closed && can(ctx, 'er.case.team.manage'),
+          update: !closed && can(ctx, 'er.case.edit'), manageTeam: !closed && can(ctx, 'er.case.team.manage'),
           close: !closed && can(ctx, 'er.case.close') && availableTransitions(sm, c.status_code, () => true).some((t) => t.to === 'CLOSED'),
           accessLog: can(ctx, 'er.case.access_log.read'),
         },
@@ -262,8 +262,8 @@ export class ErService {
       const eligible = (await tx.query(
         `select u.display_name from platform.app_user u where u.id = $1 and exists (
            select 1 from platform.user_scope s join platform.role_permission rp on rp.role_id = s.role_id
-            where s.user_id = u.id and rp.permission_code = 'er.case.read' and s.valid_from <= now() and (s.valid_to is null or s.valid_to > now()))`, [b.userId])).rows[0];
-      if (!eligible) throw invalid('User does not hold an ER role (er.case.read)');
+            where s.user_id = u.id and rp.permission_code = 'er.case.view' and s.valid_from <= now() and (s.valid_to is null or s.valid_to > now()))`, [b.userId])).rows[0];
+      if (!eligible) throw invalid('User does not hold an ER role (er.case.view)');
       const already = (await tx.query(`select 1 from er.case_team_member where case_id=$1 and user_id=$2 and (valid_to is null or valid_to > now())`, [id, b.userId])).rowCount;
       if (already) throw conflict('User is already on the case team');
       await tx.query(`insert into er.case_team_member(case_id, user_id, case_role, granted_by) values ($1,$2,$3,$4)`, [id, b.userId, b.role, ctx.userId]);

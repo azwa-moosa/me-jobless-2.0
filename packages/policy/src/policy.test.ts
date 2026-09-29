@@ -24,7 +24,7 @@ describe('catalogue', () => {
   });
   it('Platform Administrator holds no business-data permissions (BP §15)', () => {
     const admin = ctxFor(['PLATFORM_ADMIN']);
-    for (const p of ['employee.search', 'employee.read', 'er.case.read', 'employee.salary.reveal', 'engagement.admin', 'voice.triage']) {
+    for (const p of ['employee.search', 'employee.read', 'er.case.view', 'employee.salary.reveal', 'engagement.manage', 'voice.triage']) {
       expect(can(admin, p)).toBe(false);
     }
   });
@@ -33,8 +33,8 @@ describe('catalogue', () => {
     expect(holders).toEqual(['DOCUMENT_HR']);
   });
   it('Manager and Employee cannot read ER cases', () => {
-    expect(can(ctxFor(['MANAGER']), 'er.case.read')).toBe(false);
-    expect(can(ctxFor(['EMPLOYEE']), 'er.case.read')).toBe(false);
+    expect(can(ctxFor(['MANAGER']), 'er.case.view')).toBe(false);
+    expect(can(ctxFor(['EMPLOYEE']), 'er.case.view')).toBe(false);
   });
 });
 
@@ -48,7 +48,7 @@ describe('scope', () => {
   it('BANK scope passes any unit but still needs the permission', () => {
     const hr = ctxFor(['HR_ANALYTICS_ADMIN'], { bank: true });
     expect(canInOrg(hr, 'employee.search', 'anything')).toBe(true);
-    expect(canInOrg(hr, 'er.case.read', 'anything')).toBe(false);
+    expect(canInOrg(hr, 'er.case.view', 'anything')).toBe(false);
   });
 });
 
@@ -62,7 +62,7 @@ describe('ER case access', () => {
   it('ER Manager portfolio override', () => {
     expect(canSeeCase(ctxFor(['ER_MANAGER']), { isActiveTeamMember: false, isCreator: false })).toBe(true);
   });
-  it('team membership alone is not enough without er.case.read', () => {
+  it('team membership alone is not enough without er.case.view', () => {
     expect(canSeeCase(ctxFor(['MANAGER']), { isActiveTeamMember: true, isCreator: false })).toBe(false);
   });
 });

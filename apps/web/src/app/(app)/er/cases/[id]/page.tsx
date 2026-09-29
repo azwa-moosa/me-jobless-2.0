@@ -280,7 +280,7 @@ function Team({ c, onChanged }: { c: any; onChanged: () => void }) {
       {adding && (
         <Modal title="Add case team member" description="Only users holding an ER role can be added." onClose={() => setAdding(false)}
           footer={<><button className="btn" onClick={() => setAdding(false)}>Cancel</button><button className="btn btn-primary" disabled={!user} onClick={add}>Add</button></>}>
-          <div className="field"><label>Person</label><UserPicker value={user} onChange={setUser} permission="er.case.read" /></div>
+          <div className="field"><label>Person</label><UserPicker value={user} onChange={setUser} permission="er.case.view" /></div>
           <div className="field"><label htmlFor="rl">Case role</label><select id="rl" className="select" value={role} onChange={(e) => setRole(e.target.value)}>{['OFFICER', 'INVESTIGATOR', 'REVIEWER', 'OBSERVER'].map((r) => <option key={r} value={r}>{labelise(r)}</option>)}</select></div>
           {err && <Callout tone="bad">{err}</Callout>}
         </Modal>

@@ -50,8 +50,8 @@ export default function ConfigPage() {
       <div className="card mt-3">
         <div className="card-head"><h3>Role catalogue (draft access matrix)</h3><SampleTag>DR-06 / DR-07</SampleTag></div>
         <Async state={roles} rows={4}>{(rs) => (
-          <div className="card-body flush"><div className="table-wrap"><table className="table"><thead><tr><th>Ref</th><th>Role</th><th>Default scope</th><th>Status</th><th>Permissions</th></tr></thead><tbody>
-            {rs.map((r) => <tr key={r.code}><td className="mono">{r.ref}</td><td className="strong">{r.name}</td><td>{labelise(r.defaultScope)}</td><td className="small">{r.status}</td><td className="small muted">{r.permissions.length} · {r.permissions.filter((p: string) => !['me.read', 'actions.use', 'voice.submit'].includes(p)).slice(0, 5).join(', ')}{r.permissions.length > 8 ? '…' : ''}</td></tr>)}
+          <div className="card-body flush"><div className="table-wrap"><table className="table"><thead><tr><th>Code</th><th>Role</th><th>Default scope</th><th>Status</th><th>Permissions</th></tr></thead><tbody>
+            {rs.map((r) => <tr key={r.code}><td className="mono">{r.code}</td><td className="strong">{r.name}</td><td>{labelise(r.defaultScope)}</td><td className="small">{r.status}</td><td className="small muted">{r.permissions.length} · {r.permissions.filter((p: string) => !['me.read', 'actions.use', 'voice.submit'].includes(p)).slice(0, 5).join(', ')}{r.permissions.length > 8 ? '…' : ''}</td></tr>)}
           </tbody></table></div></div>)}</Async>
       </div>
     </>

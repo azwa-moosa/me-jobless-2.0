@@ -38,13 +38,13 @@ export class ActionsService {
   /** Restricted detail + source link only when the SOURCE record's policy passes (ACT-001, ER-006). */
   private canSeeDetail(ctx: SecurityContext, row: any): boolean {
     if (row.visibility_class === 'STANDARD') return true;
-    if (row.visibility_class === 'CASE_RESTRICTED') return row.source_visible && can(ctx, 'er.case.read');
+    if (row.visibility_class === 'CASE_RESTRICTED') return row.source_visible && can(ctx, 'er.case.view');
     return false;
   }
 
   private canAct(ctx: SecurityContext, row: any): boolean {
     return row.owner_user_id === ctx.userId || row.is_team_member
-      || (row.visibility_class === 'CASE_RESTRICTED' && this.canSeeDetail(ctx, row) && can(ctx, 'er.case.update'));
+      || (row.visibility_class === 'CASE_RESTRICTED' && this.canSeeDetail(ctx, row) && can(ctx, 'er.case.edit'));
   }
 
   private present(ctx: SecurityContext, row: any, sm: StateMachineDef) {

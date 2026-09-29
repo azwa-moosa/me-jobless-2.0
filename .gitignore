@@ -7,3 +7,6 @@ dist
 coverage
 .turbo
 test-results
+*.tsbuildinfo
+.vscode
+package-lock.json

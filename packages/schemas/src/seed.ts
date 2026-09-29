@@ -46,7 +46,9 @@ async function main() {
       'insert into platform.role(code, name, description, is_privileged, allowed_scope_types, status_note) values ($1,$2,$3,$4,$5,$6) returning id',
       [r.code, r.name, `${r.ref} – ${r.name}`, !!r.privileged, scopes, r.status]);
     roleId.set(r.code, rows[0].id);
-    for (const p of r.permissions) await q('insert into platform.role_permission values ($1,$2)', [rows[0].id, p]);
+    // Deduplicate permissions (spread operations may create duplicates)
+    const uniquePerms = Array.from(new Set(r.permissions));
+    for (const p of uniquePerms) await q('insert into platform.role_permission values ($1,$2)', [rows[0].id, p]);
   }
 
   // ---------------------------------------------------------------- organisation (effective-dated)
@@ -115,8 +117,8 @@ async function main() {
   // ---------------------------------------------------------------- teams
   const erTeam = (await q(`insert into platform.team(code, name, module) values ('ER_TEAM','ER Team','er') returning id`)).rows[0].id;
   const anTeam = (await q(`insert into platform.team(code, name, module) values ('ANALYTICS_TEAM','Analytics Team','analytics') returning id`)).rows[0].id;
-  await q(`insert into platform.team_member(team_id, user_id, role_in_team) values ($1,$2,'LEAD'),($1,$3,'MEMBER'),($1,$4,'MEMBER'),($5,$6,'LEAD')`,
-    [erTeam, U('er.manager'), U('er.officer'), U('er.officer2'), anTeam, U('analytics.admin')]);
+  await q(`insert into platform.team_member(team_id, user_id, role_in_team) values ($1,$2,'LEAD'),($1,$3,'MEMBER'),($4,$5,'LEAD')`,
+    [erTeam, U('er.manager'), U('ish'), anTeam, U('analytics.admin')]);
 
   // ---------------------------------------------------------------- SAMPLE configuration
   const lookups: Record<string, [string, string, Array<[string, string]>]> = {
@@ -157,12 +159,12 @@ async function main() {
       { code: 'OUTCOME_PENDING', label: 'Outcome pending' }, { code: 'ON_HOLD', label: 'On hold' }, { code: 'CLOSED', label: 'Closed', terminal: true },
     ],
     transitions: [
-      { from: ['INTAKE'], to: 'ASSESSMENT', permission: 'er.case.status', label: 'Start assessment' },
-      { from: ['ASSESSMENT'], to: 'INVESTIGATION', permission: 'er.case.status', label: 'Open investigation' },
-      { from: ['INVESTIGATION'], to: 'OUTCOME_PENDING', permission: 'er.case.status', label: 'Move to outcome' },
-      { from: ['INTAKE', 'ASSESSMENT', 'INVESTIGATION', 'OUTCOME_PENDING'], to: 'ON_HOLD', permission: 'er.case.status', requiresReason: true, label: 'Put on hold' },
-      { from: ['ON_HOLD'], to: 'ASSESSMENT', permission: 'er.case.status', label: 'Resume (assessment)' },
-      { from: ['ON_HOLD'], to: 'INVESTIGATION', permission: 'er.case.status', label: 'Resume (investigation)' },
+      { from: ['INTAKE'], to: 'ASSESSMENT', permission: 'er.case.status_change', label: 'Start assessment' },
+      { from: ['ASSESSMENT'], to: 'INVESTIGATION', permission: 'er.case.status_change', label: 'Open investigation' },
+      { from: ['INVESTIGATION'], to: 'OUTCOME_PENDING', permission: 'er.case.status_change', label: 'Move to outcome' },
+      { from: ['INTAKE', 'ASSESSMENT', 'INVESTIGATION', 'OUTCOME_PENDING'], to: 'ON_HOLD', permission: 'er.case.status_change', requiresReason: true, label: 'Put on hold' },
+      { from: ['ON_HOLD'], to: 'ASSESSMENT', permission: 'er.case.status_change', label: 'Resume (assessment)' },
+      { from: ['ON_HOLD'], to: 'INVESTIGATION', permission: 'er.case.status_change', label: 'Resume (investigation)' },
       { from: ['ASSESSMENT', 'OUTCOME_PENDING'], to: 'CLOSED', permission: 'er.case.close', requiresReason: true, label: 'Close case' },
     ],
   };
@@ -226,15 +228,15 @@ async function main() {
     return rows[0].id;
   }
 
-  const c1 = await createCase({ by: 'er.officer', status: 'ASSESSMENT', type: 'DISCIPLINARY', category: 'ATTENDANCE', source: 'MANAGER', priority: 'MEDIUM', conf: 'STANDARD',
+  const c1 = await createCase({ by: 'ish', status: 'ASSESSMENT', type: 'DISCIPLINARY', category: 'ATTENDANCE', source: 'MANAGER', priority: 'MEDIUM', conf: 'STANDARD',
     summary: 'SAMPLE – repeated unapproved absence reported by line manager (synthetic scenario).', openedDaysAgo: 18,
-    team: [['er.officer', 'LEAD'], ['er.manager', 'REVIEWER']], subjectUid: subject(10) });
+    team: [['ish', 'LEAD'], ['er.manager', 'REVIEWER']], subjectUid: subject(10) });
   await c1.ev('NOTE', 16, 'SAMPLE – initial review of attendance extract completed.');
   await c1.ev('STATUS_CHANGED', 15, 'Status INTAKE → ASSESSMENT');
-  await action({ module: 'er', type: 'er_case', recordId: c1.id, title: 'ER follow-up task', detail: `${c1.reference}: obtain attendance records from manager`, owner: 'er.officer',
-    priority: 'HIGH', status: 'IN_PROGRESS', dueDays: -3, vis: 'CASE_RESTRICTED', mandatory: true, by: 'er.officer' });
+  await action({ module: 'er', type: 'er_case', recordId: c1.id, title: 'ER follow-up task', detail: `${c1.reference}: obtain attendance records from manager`, owner: 'ish',
+    priority: 'HIGH', status: 'IN_PROGRESS', dueDays: -3, vis: 'CASE_RESTRICTED', mandatory: true, by: 'ish' });
   await action({ module: 'er', type: 'er_case', recordId: c1.id, title: 'ER follow-up task', detail: `${c1.reference}: provide rota for the period`, owner: 'manager',
-    priority: 'MEDIUM', status: 'OPEN', dueDays: 2, vis: 'CASE_RESTRICTED', by: 'er.officer' });
+    priority: 'MEDIUM', status: 'OPEN', dueDays: 2, vis: 'CASE_RESTRICTED', by: 'ish' });
 
   const c2 = await createCase({ by: 'er.manager', status: 'INVESTIGATION', type: 'GRIEVANCE', category: 'INTERPERSONAL', source: 'DIRECT', priority: 'HIGH', conf: 'RESTRICTED',
     summary: 'SAMPLE – grievance about team conduct (synthetic scenario).', openedDaysAgo: 30,
@@ -243,9 +245,9 @@ async function main() {
   await action({ module: 'er', type: 'er_case', recordId: c2.id, title: 'ER follow-up task', detail: `${c2.reference}: schedule interviews`, owner: 'er.manager',
     priority: 'HIGH', status: 'OPEN', dueDays: 1, vis: 'CASE_RESTRICTED', mandatory: true, by: 'er.manager' });
 
-  const c3 = await createCase({ by: 'er.officer', status: 'CLOSED', type: 'INVESTIGATION', category: 'POLICY_BREACH', source: 'OTHER', priority: 'LOW', conf: 'STANDARD',
+  const c3 = await createCase({ by: 'ish', status: 'CLOSED', type: 'INVESTIGATION', category: 'POLICY_BREACH', source: 'OTHER', priority: 'LOW', conf: 'STANDARD',
     summary: 'SAMPLE – minor policy query, closed after assessment (synthetic scenario).', openedDaysAgo: 60,
-    team: [['er.officer', 'LEAD'], ['er.manager', 'REVIEWER']], subjectUid: subject(77), closed: true });
+    team: [['ish', 'LEAD'], ['er.manager', 'REVIEWER']], subjectUid: subject(77), closed: true });
   await c3.ev('CLOSED', 2, 'Case closed. Reason: SAMPLE: no case to answer');
 
   // General (non-ER) sample actions so every persona's My Work has content.
@@ -262,11 +264,11 @@ async function main() {
     ['employee', 'Acknowledge policy update (SAMPLE)', 'LOW', 10, 'OPEN'],
     ['document.hr', 'Collect approved letter templates (DR-30)', 'HIGH', 2, 'OPEN'],
     ['document.approver', 'Nominate signatories per letter type (DR-30)', 'MEDIUM', 7, 'OPEN'],
-    ['platform.admin', 'Request Entra DEV app registration', 'HIGH', 1, 'IN_PROGRESS'],
+    ['azwa.moosa', 'Request Entra DEV app registration', 'HIGH', 1, 'IN_PROGRESS'],
     ['voice.triage', 'Review draft triage categories (DR-28)', 'LOW', 14, 'OPEN'],
     ['fwt.coordinator', 'Gather quarter activity plan (SAMPLE)', 'LOW', 8, 'OPEN'],
     ['access.approver', 'Review pending access recertification (SAMPLE)', 'MEDIUM', 0.5, 'OPEN'],
-    ['er.officer', 'Update D&G tracker reference mapping (DR-19)', 'MEDIUM', -8, 'COMPLETED', 1],
+    ['ish', 'Update D&G tracker reference mapping (DR-19)', 'MEDIUM', -8, 'COMPLETED', 1],
   ];
   for (const [owner, title, pr, due, st, done] of general) {
     await action({ module: 'platform', type: 'phase0_task', recordId: sysUser, title, owner, priority: pr, status: st, dueDays: due, by: 'hr.leadership', completedDaysAgo: done });

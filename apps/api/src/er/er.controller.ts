@@ -10,25 +10,25 @@ export class ErController {
   @Get('dashboard') @Requires('er.dashboard.read')
   dashboard(@Ctx() ctx: SecurityContext) { return this.er.dashboard(ctx); }
 
-  @Get('cases') @Requires('er.case.read')
+  @Get('cases') @Requires('er.case.view')
   list(@Ctx() ctx: SecurityContext, @Query('status') status?: string) { return this.er.list(ctx, status); }
 
   @Post('cases') @Requires('er.case.create')
   create(@Ctx() ctx: SecurityContext, @Body() body: any) { return this.er.create(ctx, body ?? {}); }
 
-  @Get('cases/:id') @Requires('er.case.read')
+  @Get('cases/:id') @Requires('er.case.view')
   get(@Ctx() ctx: SecurityContext, @Param('id') id: string) { return this.er.get(ctx, id); }
 
-  @Get('cases/:id/timeline') @Requires('er.case.read')
+  @Get('cases/:id/timeline') @Requires('er.case.view')
   timeline(@Ctx() ctx: SecurityContext, @Param('id') id: string) { return this.er.timeline(ctx, id); }
 
-  @Post('cases/:id/timeline') @Requires('er.case.update')
+  @Post('cases/:id/timeline') @Requires('er.case.edit')
   addEvent(@Ctx() ctx: SecurityContext, @Param('id') id: string, @Body() body: any) { return this.er.addEvent(ctx, id, body ?? {}); }
 
-  @Post('cases/:id/timeline/:eventId/amend') @Requires('er.case.update')
+  @Post('cases/:id/timeline/:eventId/amend') @Requires('er.case.edit')
   amend(@Ctx() ctx: SecurityContext, @Param('id') id: string, @Param('eventId') eventId: string, @Body() body: any) { return this.er.amendEvent(ctx, id, eventId, body ?? {}); }
 
-  @Post('cases/:id/status') @HttpCode(200) @Requires('er.case.status')
+  @Post('cases/:id/status') @HttpCode(200) @Requires('er.case.status_change')
   status(@Ctx() ctx: SecurityContext, @Param('id') id: string, @Body() body: any) { return this.er.changeStatus(ctx, id, body ?? {}); }
 
   @Post('cases/:id/close') @HttpCode(200) @Requires('er.case.close')
@@ -42,10 +42,10 @@ export class ErController {
     return this.er.removeMember(ctx, id, userId, reason);
   }
 
-  @Get('cases/:id/tasks') @Requires('er.case.read')
+  @Get('cases/:id/tasks') @Requires('er.case.view')
   tasks(@Ctx() ctx: SecurityContext, @Param('id') id: string) { return this.er.tasks(ctx, id); }
 
-  @Post('cases/:id/tasks') @Requires('er.case.update')
+  @Post('cases/:id/tasks') @Requires('er.case.edit')
   addTask(@Ctx() ctx: SecurityContext, @Param('id') id: string, @Body() body: any) { return this.er.addTask(ctx, id, body ?? {}); }
 
   @Get('cases/:id/access-log') @Requires('er.case.access_log.read')

@@ -24,7 +24,7 @@ export class AuthController {
         where u.is_synthetic and u.status = 'ACTIVE' order by r.code, u.upn`);
     return rows.map((r) => ({
       upn: r.upn, displayName: r.display_name, roleCode: r.role_code, roleName: r.role_name,
-      ref: ROLES.find((x) => x.code === r.role_code)?.ref, scope: r.scope_name ?? r.scope_type,
+      order: ROLES.findIndex((x) => x.code === r.role_code), scope: r.scope_name ?? r.scope_type,
       expired: !!r.valid_to && new Date(r.valid_to) < new Date(), note: String(r.grant_reason).replace('DEV persona – ', ''),
     }));
   }

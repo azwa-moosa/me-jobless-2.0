@@ -12,7 +12,7 @@ export default function ErDashboard() {
   const router = useRouter();
   const dash = useApi<any>('/er/dashboard');
   const [status, setStatus] = useState<string>('');
-  const cases = useApi<any[]>(can('er.case.read') ? `/er/cases${status ? `?status=${status}` : ''}` : null);
+  const cases = useApi<any[]>(can('er.case.view') ? `/er/cases${status ? `?status=${status}` : ''}` : null);
 
   if (dash.error?.status === 403) return <div className="card"><ErrorState error={dash.error} /></div>;
   return (

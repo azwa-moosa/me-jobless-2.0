@@ -5,6 +5,18 @@ This repository is **v0.1 – Sprint 1 foundation + first vertical slice** (HR A
 
 > **DEV uses synthetic data only.** No real employee data may be loaded outside an approved UAT/PROD environment. CI fails on NID-like values.
 
+## RBAC Architecture (Sept 2026 Refactoring)
+
+This platform implements **proper Role-Based Access Control (RBAC)** with granular permissions, data scopes, and configurable access grants. All access is determined **server-side** and **at the database level** (Row-Level Security). UI hiding is never relied upon for security.
+
+**Key security principles:**
+- User → Assigned Role(s) → Permission Set → Data Scope (configurable, no code changes needed)
+- All authorization checked on every request: role/permission → org scope → resource-level → RLS/DB policy
+- Sensitive fields (salary, NID, passport) are always masked; reveals are audited with user/time/session
+- ER cases visible only to authorized case team members (+ database RLS)
+- Temporary access with expiry dates; revocation is immediate
+- All sensitive actions audited: login, logout, case access, field reveals, role assignments, access revocation
+
 ## Stack
 
 | Layer | Choice |
@@ -27,11 +39,11 @@ cp .env.example .env            # DEV values; never commit .env
 pnpm install
 pnpm infra:up                   # Postgres (+pgvector), Azurite, Mailpit
 pnpm db:migrate                 # applies packages/schemas/migrations/*.sql + grants
-pnpm db:seed                    # synthetic org, 1,200 employees, 18 personas, sample config
+pnpm db:seed                    # synthetic org, 1,200 employees, 10 main + legacy personas, sample config
 pnpm dev                        # web :3000 · api :4000 · worker
 ```
 
-Open http://localhost:3000 and pick a persona (one per draft role R1–R16, plus edge cases).
+Open http://localhost:3000 and pick a persona to test (10 new personas: Azwa, Maiz, Shai, Rayya, Humaam, Anj, Arif, Ish, Azwa #2, Bishwajit).
 
 Without Docker: create database `bml_people_er` owned by a superuser called `app_migrator` (password `app_migrator_dev`), then continue from `pnpm db:migrate`. The migration creates the restricted `app_runtime` role itself.
 
@@ -51,15 +63,16 @@ Useful commands:
 
 | Persona | Try |
 |---|---|
-| **Raifa Shareef** – ER Officer | Home → overdue ER task → *Open source record* → case chronology; *New case*; amend a chronology entry |
-| **Imran Hameed** – ER Officer (not on team) | Paste a case URL from Raifa's session → permission denied (API 403, audited, RLS returns no row) |
-| **Khadheeja Waheed** – ER Manager | Sees all cases; add a case team member; close a case (blocked by open mandatory task → override with reason); Access log tab |
-| **Yoosuf Adam** – Manager | My Work shows "ER follow-up task" with **restricted detail** – no case reference, no link |
-| **Shifa Rauf** – Document HR | Employee lookup → Reveal salary/NID (audited) |
-| **Hussain Faisal** – Division Head | Employee lookup only returns DIV01 staff |
-| **Ali Riyaz** – expired grant | Signs in to "No active access" |
-| **Shaan Manik** – Platform Admin | Org tree as-of dates, config, feature flags; try enabling `voice.anonymous_route` (blocked – DR-27); no employee/ER data |
-| **Moosa Areef** – Audit Reviewer | Audit log → *Verify chain* |
+| **Azwa Moosa** – Platform Owner / Super Admin | Full application and data access across all modules, audit logs, user management, configuration |
+| **Maiz** – People & Culture Director | P&C executive visibility: ER cases, analytics, engagement, Total Rewards, sensitive data access |
+| **Shai** – Head – Total Rewards & Employee Relations | Full TR + ER leadership: case management, compensation oversight, analytics, team management |
+| **Rayya** – Manager – ER, Engagement & Analytics | Full ER case management, engagement administration, analytics dashboards within scope |
+| **Humaam** – Manager – Total Rewards | Total Rewards administration: salary/compensation data, benefits, reports, manager oversight |
+| **Anj** – Officer – Total Rewards | Operational TR access: salary/compensation information, sensitive field reveals (audited), case-restricted |
+| **Arif** – Officer – Total Rewards | Operational TR access: same as Anj, salary/compensation data, case-restricted |
+| **Ish** – Officer – Employee Relations | ER case-scoped access: assigned cases, authorized case team membership only (not all ER cases) |
+| **Azwa Moosa Number 2** – Restricted ER Test User | ER Officer with no case assignment → tests RLS/403 access denial (security testing) |
+| **Bishwajit** – Reviewer – Audit & Compliance | Read-only audit access: audit log, hash-chain verification, compliance review (no data editing) |
 
 ## Repository layout
 

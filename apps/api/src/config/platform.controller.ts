@@ -21,7 +21,7 @@ export class PlatformController {
 
   @Get('config/roles') @Requires('config.lookups.read')
   roles() {
-    return ROLES.map((r) => ({ ref: r.ref, code: r.code, name: r.name, defaultScope: r.defaultScope, status: r.status, permissions: r.permissions }));
+    return ROLES.map((r) => ({ code: r.code, name: r.name, defaultScope: r.defaultScope, status: r.status, permissions: r.permissions }));
   }
 
   // ---------------------------------------------------------------- feature flags (PLT-010)
@@ -45,7 +45,7 @@ export class PlatformController {
   }
 
   // ---------------------------------------------------------------- user directory (for assignment pickers)
-  @Get('directory/users') @RequiresAny('actions.reassign', 'er.case.team.manage', 'actions.create', 'er.case.update', 'admin.users.read')
+  @Get('directory/users') @RequiresAny('actions.reassign', 'er.case.team.manage', 'actions.create', 'er.case.edit', 'admin.users.read')
   async users(@Query('q') q = '', @Query('permission') permission?: string) {
     const params: unknown[] = [`%${q.toLowerCase()}%`];
     let permFilter = '';
