@@ -7,6 +7,9 @@ export default {
   reactStrictMode: true,
   poweredByHeader: false,
   outputFileTracingRoot: root,
+  env: {
+    ...(process.env.API_BASE_URL ? { API_BASE_URL: process.env.API_BASE_URL } : {}),
+  },
   async headers() {
     return [{
       source: '/:path*',
